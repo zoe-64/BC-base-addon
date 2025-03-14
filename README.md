@@ -27,4 +27,4 @@ LibMyKitty provides a set of tools to help mod developers create and manage thei
 
 View [Quickstart.md](wiki/quickstart.md) for more information on how to get started.
 
-If you are looking for something more documented, check out [wiki/Wiki.md]()
+If you are looking for something more documented, check out [Wiki.md](wiki/wiki.md)
