@@ -1,12 +1,11 @@
 # LibMyKitty
 
-### `initMyKitty`
+### `createMod`
 
-The magic that brings your mod to life! `initMyKitty` is a wrapper around `bcModSdk.registerMod` that not only registers your mod but also tells My Kitty about your mod's name and version.</br>
+The magic that brings your mod to life! `createMod` is a wrapper around `bcModSdk.registerMod` that not only registers your mod but also tells My Kitty about your mod's name and version.</br>
 Without this function, My Kitty wouldn't know about your mod and wouldn't be able to do anything with it. </br>So make sure to call this function at the beginning of your mod's code!</br>
 The options object can have the following properties:
 
-- `activities`: Whether to enable activities for the mod.
 - `syncCharacters`: Whether to sync character data between players.
 
 ### `AtLogin`
@@ -24,7 +23,7 @@ Check out [Quickstart.md](quickstart.md) for more information on how to get star
 - ## [storage](storage.md)
 - ## [events & listeners](events&listeners.md)
 - ## [webhooks](webhooks.md)
-- ## [activites](activities.md)
+- ## [activities](activities.md)
 
 ## Misc
 

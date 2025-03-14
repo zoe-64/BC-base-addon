@@ -31,14 +31,14 @@ type EventListeners = {
   [K in keyof Events]: (message: AddonServerChatRoomMessage, data: Events[K]) => void;
 };
 
-const modListneers = new Map<keyof Events, EventListeners[keyof Events]>();
+const modListeners = new Map<keyof Events, EventListeners[keyof Events]>();
 
 export function registerModListener<T extends keyof Events>(type: T, callback: EventListeners[T]) {
-  modListneers.set(type, callback);
+  modListeners.set(type, callback);
 }
 
 export function unregisterModListener<T extends keyof Events>(type: T) {
-  modListneers.delete(type);
+  modListeners.delete(type);
 }
 export function receivePacket(message: UnverifiedServerChatRoomMessage) {
   const received = isModMessage(message);
@@ -46,9 +46,9 @@ export function receivePacket(message: UnverifiedServerChatRoomMessage) {
 
   const type = message.Dictionary[0]!.type;
   const data = message.Dictionary[0]!.data;
-  for (const [key, modListneer] of [...modListneers]) {
+  for (const [key, modListener] of [...modListeners]) {
     if (key === type) {
-      modListneer(message, data);
+      modListener(message, data);
     }
   }
 }

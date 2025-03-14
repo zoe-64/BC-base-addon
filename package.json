@@ -1,6 +1,6 @@
 {
   "name": "libmykitty",
-  "version": "1.0.9",
+  "version": "1.1.0",
   "description": "Library of utility functions for interacting with the Bondage Club mod api.",
   "scripts": {
     "build": "tsup",
@@ -10,14 +10,14 @@
   "author": "zoe-64",
   "license": "MIT",
   "dependencies": {
-    "bondage-club-mod-sdk": "^1.2.0",
     "lodash": "^4.17.21"
   },
   "devDependencies": {
     "@types/lodash": "^4.17.16",
     "bc-stubs": "^113.0.0",
-    "typescript": "^5.8.2",
-    "tsup": "^8.4.0"
+    "bondage-club-mod-sdk": "^1.2.0",
+    "tsup": "^8.4.0",
+    "typescript": "^5.8.2"
   },
   "exports": {
     "import": "./dist/libmykitty.mjs",

@@ -3,7 +3,7 @@
 This "module" provides functions for saving and syncing data between players.
 It is used to store data that needs to be shared between players, such as player stats, inventory, and other game-related information. The data is saved locally and synchronized with the server.
 
-It is recommended to use `createModStorageManager` to create a new instance of the storage manager. And to enable the option `syncCharacters` in `initMyKitty`. This will enable the storage to sync character data between players.
+It is recommended to use `createModStorageManager` to create a new instance of the storage manager. And to enable the option `syncCharacters` in `createMod`. This will enable the storage to sync character data between players.
 
 ### `createModStorageManager`
 

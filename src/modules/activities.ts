@@ -20,45 +20,43 @@ const insertActivityButton = (name: string, id: string, src: string, onClick?: (
   return button;
 };
 
-const activityInGroup = (activity: MyKittyActivity, group: AssetGroupItemName): boolean => {
-  return Boolean(activity.Target?.includes(group) || (activity.TargetSelf?.includes(group) && Player.MemberNumber === CurrentCharacter?.MemberNumber));
-};
-const activityIsInserted = (id: string): boolean => {
-  return Boolean(document.getElementById(id));
-};
+const activityInGroup = (activity: MyKittyActivity, group: AssetGroupItemName): boolean =>
+  Boolean(activity.Target?.includes(group) || (activity.TargetSelf?.includes(group) && Player.MemberNumber === CurrentCharacter?.MemberNumber));
+const activityIsInserted = (id: string): boolean => Boolean(document.getElementById(id));
 const activityFitsCriteria = (activity: MyKittyActivity, player: Character): boolean => {
-  if (!player) {
-    return false;
-  }
+  if (!player) return false;
   return Boolean((!activity.Criteria || activity.Criteria(player)) && player.FocusGroup && activityInGroup(activity, player.FocusGroup.Name));
 };
 const activities: MyKittyActivity[] = [];
-export const registerActivity = (activity: MyKittyActivity) => activities.push(activity);
+let activitiesActive = false;
+export const registerActivity = (activity: MyKittyActivity) => {
+  if (!activitiesActive) {
+    activitiesActive = true;
+    BC_SDK.hookFunction("DialogMenuMapping.activities.GetClickStatus", 1, (args, next) => {
+      const [_C, _clickedObj, _equippedItem] = args;
+      if (!_clickedObj) return null;
+      return next(args);
+    });
 
-export function EnableActivities() {
-  BC_SDK.hookFunction("DialogMenuMapping.activities.GetClickStatus", 1, (args, next) => {
-    const [_C, _clickedObj, _equippedItem] = args;
-    if (!_clickedObj) return null;
-    return next(args);
-  });
+    BC_SDK.hookFunction("DialogChangeMode", 1, async (args, next) => {
+      const [_mode] = args;
+      next(args);
+      if (_mode !== "activities") return;
+      const character = CurrentCharacter?.FocusGroup ? CurrentCharacter : Player;
+      const activityGrid = await waitForElement("#dialog-activity-grid");
+      const focusGroup = character?.FocusGroup?.Name;
+      if (!focusGroup) return;
 
-  BC_SDK.hookFunction("DialogChangeMode", 1, async (args, next) => {
-    const [_mode] = args;
-    next(args);
-    if (_mode !== "activities") return;
+      for (const activity of activities) {
+        if (!activity) continue;
 
-    const activityGrid = await waitForElement("#dialog-activity-grid");
-    const focusGroup = CurrentCharacter?.FocusGroup?.Name;
-    if (!focusGroup) return;
-
-    for (const activity of activities) {
-      if (!activity) continue;
-
-      if (activityFitsCriteria(activity, CurrentCharacter ?? Player)) {
-        if (!activityIsInserted(activity.ID)) {
-          activityGrid.appendChild(insertActivityButton(activity.Name, activity.ID, activity.Image, activity.OnClick));
+        if (activityFitsCriteria(activity, character ?? Player)) {
+          if (!activityIsInserted(activity.ID)) {
+            activityGrid.appendChild(insertActivityButton(activity.Name, activity.ID, activity.Image, activity.OnClick));
+          }
         }
       }
-    }
-  });
-}
+    });
+  }
+  activities.push(activity);
+};

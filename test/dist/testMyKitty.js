@@ -5506,9 +5506,36 @@
     }
   });
 
-  // node_modules/bondage-club-mod-sdk/dist/bcmodsdk.js
-  var require_bcmodsdk = __commonJS({
+  // node_modules/libmykitty/dist/libmykitty.mjs
+  var import_lodash = __toESM(require_lodash(), 1);
+  var __create2 = Object.create;
+  var __defProp2 = Object.defineProperty;
+  var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
+  var __getOwnPropNames2 = Object.getOwnPropertyNames;
+  var __getProtoOf2 = Object.getPrototypeOf;
+  var __hasOwnProp2 = Object.prototype.hasOwnProperty;
+  var __commonJS2 = (cb, mod) => function __require() {
+    return mod || (0, cb[__getOwnPropNames2(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
+  };
+  var __copyProps2 = (to, from, except, desc) => {
+    if (from && typeof from === "object" || typeof from === "function") {
+      for (let key of __getOwnPropNames2(from))
+        if (!__hasOwnProp2.call(to, key) && key !== except)
+          __defProp2(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc2(from, key)) || desc.enumerable });
+    }
+    return to;
+  };
+  var __toESM2 = (mod, isNodeMode, target) => (target = mod != null ? __create2(__getProtoOf2(mod)) : {}, __copyProps2(
+    // If the importer is in node compatibility mode or this is not an ESM
+    // file that has been converted to a CommonJS file using a Babel-
+    // compatible transform (i.e. "__esModule" has not been set), then set
+    // "default" to the CommonJS "module.exports" for node compatibility.
+    isNodeMode || !mod || !mod.__esModule ? __defProp2(target, "default", { value: mod, enumerable: true }) : target,
+    mod
+  ));
+  var require_bcmodsdk = __commonJS2({
     "node_modules/bondage-club-mod-sdk/dist/bcmodsdk.js"(exports) {
+      "use strict";
       var bcModSdk3 = function() {
         "use strict";
         const o = "1.2.0";
@@ -5668,11 +5695,6 @@ One of mods you are using is using an old version of SDK. It will work for now b
       }();
     }
   });
-
-  // node_modules/libmykitty/dist/libmykitty.mjs
-  var import_lodash = __toESM(require_lodash(), 1);
-  var import_bondage_club_mod_sdk = __toESM(require_bcmodsdk(), 1);
-  var import_bondage_club_mod_sdk2 = __toESM(require_bcmodsdk(), 1);
   async function waitFor(func, cancelFunc = () => false) {
     while (!func()) {
       if (cancelFunc()) return false;
@@ -5707,8 +5729,14 @@ One of mods you are using is using an old version of SDK. It will work for now b
     });
   }
   async function AtLogin(callback) {
-    await waitFor(() => Player.CharacterID !== "");
+    await waitFor(() => Player && Player.CharacterID !== "");
     callback();
+  }
+  function getStorage(character) {
+    return character[MOD_NAME];
+  }
+  function setStorage(character, data) {
+    character[MOD_NAME] = data;
   }
   function getCharacter(identifier) {
     if (!identifier) return;
@@ -5717,6 +5745,7 @@ One of mods you are using is using an old version of SDK. It will work for now b
       return character.MemberNumber === identifier || character.Name.toLowerCase() === identifier || character.Nickname?.toLowerCase() === identifier;
     });
   }
+  var import_bondage_club_mod_sdk = __toESM2(require_bcmodsdk());
   var insertActivityButton = (name, id, src, onClick) => {
     const button = document.createElement("button");
     button.id = id;
@@ -5756,12 +5785,13 @@ One of mods you are using is using an old version of SDK. It will work for now b
       const [_mode] = args;
       next(args);
       if (_mode !== "activities") return;
+      const character = CurrentCharacter?.FocusGroup ? CurrentCharacter : Player;
       const activityGrid = await waitForElement("#dialog-activity-grid");
-      const focusGroup = CurrentCharacter?.FocusGroup?.Name;
+      const focusGroup = character?.FocusGroup?.Name;
       if (!focusGroup) return;
       for (const activity of activities) {
         if (!activity) continue;
-        if (activityFitsCriteria(activity, CurrentCharacter ?? Player)) {
+        if (activityFitsCriteria(activity, character ?? Player)) {
           if (!activityIsInserted(activity.ID)) {
             activityGrid.appendChild(insertActivityButton(activity.Name, activity.ID, activity.Image, activity.OnClick));
           }
@@ -5792,7 +5822,7 @@ One of mods you are using is using an old version of SDK. It will work for now b
         BCStorage.syncCharacter(message.Sender, data);
       });
       registerModListener("syncJoin", (message, data) => {
-        sendModEvent("syncCharacter", Player[MOD_NAME], message.Sender);
+        sendModEvent("syncCharacter", getStorage(Player), message.Sender);
       });
       BC_SDK.hookFunction("ChatRoomMessage", 1, (args, next) => {
         if (args[0].Content === "ServerEnter" && args[0].Sender === Player.MemberNumber) {
@@ -5810,12 +5840,12 @@ One of mods you are using is using an old version of SDK. It will work for now b
     const storedData = Player.ExtensionSettings[MOD_NAME];
     const decompressedData = storedData ? LZString.decompressFromBase64(storedData) : null;
     const parsedData = decompressedData ? JSON.parse(decompressedData) : defaultStorage;
-    Player[MOD_NAME] = (0, import_lodash.merge)(defaultStorage, parsedData);
+    setStorage(Player, (0, import_lodash.merge)(defaultStorage, parsedData));
     const BCStorage = {
       defaultStorage,
       /** Saves the current data to the player's extension settings, debounced to run at SAVE_INTERVAL. */
       save: (0, import_lodash.debounce)(() => {
-        const compressed = LZString.compressToBase64(JSON.stringify(Player[MOD_NAME]));
+        const compressed = LZString.compressToBase64(JSON.stringify(getStorage(Player)));
         Player.ExtensionSettings[MOD_NAME] = compressed;
         ServerPlayerExtensionSettingsSync(MOD_NAME);
         BCStorage.syncClients();
@@ -5827,18 +5857,18 @@ One of mods you are using is using an old version of SDK. It will work for now b
       },
       /** Merges and saves new data into the player's server data. */
       sync(newData) {
-        Player[MOD_NAME] = (0, import_lodash.merge)(defaultStorage, Player[MOD_NAME], newData ?? {});
+        setStorage(Player, (0, import_lodash.merge)(defaultStorage, getStorage(Player), newData ?? {}));
         BCStorage.save();
       },
       /** Sends a sync message to the server to update clients with the current data. */
       syncClients(target) {
-        sendModEvent("syncCharacter", Player[MOD_NAME], target);
+        sendModEvent("syncCharacter", getStorage(Player), target);
       },
       /** Syncs a specific character's data with the provided data. */
       syncCharacter(memberNumber, data) {
         const otherCharacter = getCharacter(memberNumber);
         if (!otherCharacter) return;
-        otherCharacter[MOD_NAME] = (0, import_lodash.merge)(defaultStorage, otherCharacter[MOD_NAME], data);
+        setStorage(otherCharacter, (0, import_lodash.merge)(defaultStorage, getStorage(otherCharacter), data));
       }
     };
     return BCStorage;
@@ -5858,24 +5888,25 @@ One of mods you are using is using an old version of SDK. It will work for now b
     };
     ServerSend("ChatRoomChat", ChatRoomMessage);
   }
-  var modListneers = /* @__PURE__ */ new Map();
+  var modListeners = /* @__PURE__ */ new Map();
   function registerModListener(type, callback) {
-    modListneers.set(type, callback);
+    modListeners.set(type, callback);
   }
   function receivePacket(message) {
     const received = isModMessage(message);
     if (!received) return;
     const type = message.Dictionary[0].type;
     const data = message.Dictionary[0].data;
-    for (const [key, modListneer] of [...modListneers]) {
+    for (const [key, modListener] of [...modListeners]) {
       if (key === type) {
-        modListneer(message, data);
+        modListener(message, data);
       }
     }
   }
   function isModMessage(message) {
     return message?.Content === `${MOD_NAME}Msg` && message.Sender && message.Sender !== Player.MemberNumber && message.Dictionary && message.Dictionary[0]?.data && message.Type === "Hidden";
   }
+  var import_bondage_club_mod_sdk2 = __toESM2(require_bcmodsdk());
 
   // constants.ts
   var VERSION = "1.0.0";
@@ -5901,6 +5932,17 @@ One of mods you are using is using an old version of SDK. It will work for now b
     });
     sendModEvent("foo", { num: 1 });
   }
+  registerModListener("pats", (message, { isHeadPat }) => {
+    if (isHeadPat) {
+      console.log("AWOOOGAH!");
+      return;
+    }
+    console.log("awooo!");
+  });
+  function sendPats(isHeadPat) {
+    sendModEvent("pats", { isHeadPat });
+  }
+  window.sendPats = sendPats;
 })();
 /*! Bundled license information:
 

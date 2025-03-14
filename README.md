@@ -16,7 +16,7 @@ pnpm add libmykitty
 
 LibMyKitty provides a set of tools to help mod developers create and manage their modifications. Here's a summary of its key features:
 
-- **Mod Initialization:** The `initMyKitty` function allows developers to easily register their mod with the game, ensuring it's recognized and can function correctly. Without needing to install the bondage-club-mod-sdk.
+- **Mod Initialization:** The `createMod` function allows developers to easily register their mod with the game, ensuring it's recognized and can function correctly. Without needing to install the bondage-club-mod-sdk.
 
 - **Event Handling:** Functions like `AtLogin` enable developers to execute code when specific events occur, such as when a player logs in.
 - **Communication:** The library provides sending data between players and the server through functions like `sendModEvent` and `registerModListener`, allowing for the exchange of custom messages.

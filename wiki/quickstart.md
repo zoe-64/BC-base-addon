@@ -26,10 +26,10 @@ in your `tsconfig.json` if you are using `bc-stubs`
 
 #### Step 1 - Initialize before login
 
-`initMyKitty` is basically a wrapper of `bcModSdk.registerMod`. This enables my kitty to know about your mod. It also gives it the information about your mod name and your version so it can quickstart the features it provides. Such as storage and sending data between players.
+`createMod` is basically a wrapper of `bcModSdk.registerMod`. This enables my kitty to know about your mod. It also gives it the information about your mod name and your version so it can quickstart the features it provides. Such as storage and sending data between players.
 
 ```ts
-export const bcModSDK = initMyKitty({ name: "bondageKitties", fullName: "bondage kitties", version: "1.1.0" }, { syncCharacters: true });
+export const bcModSDK = createMod({ name: "bondageKitties", fullName: "bondage kitties", version: "1.1.0" }, { syncCharacters: true });
 ```
 
 #### Step 2 - Login

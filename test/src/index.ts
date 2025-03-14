@@ -1,4 +1,4 @@
-import { AtLogin, CreateModStorageManager, initMyKitty, registerModListener, sendModEvent, type AddonServerChatRoomMessage } from "libmykitty";
+import { AtLogin, CreateModStorageManager, createMod, registerModListener, sendModEvent, type AddonServerChatRoomMessage } from "libmykitty";
 import { FULL_MOD_NAME, MOD_NAME, VERSION } from "../constants";
 
 type ModStorage = {
@@ -9,7 +9,7 @@ const DEFAULT_STORAGE = {
   bongos: 0,
   version: VERSION,
 };
-export const bcModSDK = initMyKitty({
+export const bcModSDK = createMod({
   fullName: FULL_MOD_NAME,
   version: VERSION,
   name: MOD_NAME,
@@ -42,11 +42,12 @@ declare module "libmykitty" {
 registerModListener("pats", (message: AddonServerChatRoomMessage, { isHeadPat }) => {
   if (isHeadPat) {
     console.log("AWOOOGAH!");
+    return;
   }
   console.log("awooo!");
 });
 
-function sendPats() {
-  sendModEvent("pats", { isHeadPat: true });
+function sendPats(isHeadPat: boolean) {
+  sendModEvent("pats", { isHeadPat });
 }
 (<any>window).sendPats = sendPats;

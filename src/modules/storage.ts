@@ -1,9 +1,9 @@
 import { type UnverifiedServerChatRoomMessage, type PartialDeep, type AddonServerChatRoomMessage } from "@/types/types";
 import { debounce, merge } from "lodash";
 import { receivePacket, registerModListener, sendModEvent } from "./server";
-import { getCharacter } from "@/utils/character";
+import { getCharacter, getStorage, setStorage } from "@/utils/character";
 import bcModSdk, { type ModSDKModAPI, type ModSDKModInfo, type ModSDKModOptions } from "bondage-club-mod-sdk";
-import { EnableActivities } from "./activities";
+import { waitFor } from "@/libmykitty";
 
 export interface StorageModel {
   version: string;
@@ -13,10 +13,10 @@ export const SAVE_INTERVAL = 5000;
 export let MOD_NAME: string;
 export let MOD_VERSION: string;
 export let BC_SDK: ModSDKModAPI;
-export let OPTIONS = { activites: false, syncCharacters: false };
+export let OPTIONS = { syncCharacters: false };
 
-export function initMyKitty(modInfo: ModSDKModInfo, options?: ModSDKModOptions & typeof OPTIONS): ModSDKModAPI {
-  BC_SDK = bcModSdk.registerMod(modInfo, options);
+export function createMod(modInfo: ModSDKModInfo, options?: ModSDKModOptions & typeof OPTIONS): ModSDKModAPI {
+  /* @__PURE__ */ BC_SDK = bcModSdk.registerMod(modInfo, options);
   MOD_NAME = modInfo.name;
   MOD_VERSION = modInfo.version;
   OPTIONS = merge(OPTIONS, options);
@@ -24,7 +24,6 @@ export function initMyKitty(modInfo: ModSDKModInfo, options?: ModSDKModOptions &
     receivePacket(args[0] as UnverifiedServerChatRoomMessage);
     return next(args);
   });
-  if (options?.activites) EnableActivities();
   return BC_SDK;
 }
 
@@ -42,7 +41,7 @@ export function CreateModStorageManager<T extends StorageModel>(defaultStorage: 
       BCStorage.syncCharacter(message.Sender, data);
     });
     registerModListener("syncJoin", (message, data) => {
-      sendModEvent("syncCharacter", Player[MOD_NAME], message.Sender);
+      sendModEvent("syncCharacter", getStorage(Player), message.Sender);
     });
     BC_SDK.hookFunction("ChatRoomMessage", 1, (args, next) => {
       if (args[0].Content === "ServerEnter" && args[0].Sender === Player.MemberNumber) {
@@ -61,12 +60,12 @@ export function CreateModStorageManager<T extends StorageModel>(defaultStorage: 
   const decompressedData = storedData ? LZString.decompressFromBase64(storedData) : null;
   const parsedData = decompressedData ? JSON.parse(decompressedData) : defaultStorage;
 
-  Player[MOD_NAME] = merge(defaultStorage, parsedData);
+  setStorage(Player, merge(defaultStorage, parsedData));
   const BCStorage = {
     defaultStorage: defaultStorage,
     /** Saves the current data to the player's extension settings, debounced to run at SAVE_INTERVAL. */
     save: debounce(() => {
-      const compressed = LZString.compressToBase64(JSON.stringify(Player[MOD_NAME]));
+      const compressed = LZString.compressToBase64(JSON.stringify(getStorage(Player)));
       Player.ExtensionSettings[MOD_NAME] = compressed;
       ServerPlayerExtensionSettingsSync(MOD_NAME);
       BCStorage.syncClients();
@@ -80,20 +79,20 @@ export function CreateModStorageManager<T extends StorageModel>(defaultStorage: 
 
     /** Merges and saves new data into the player's server data. */
     sync(newData: PartialDeep<StorageModel>) {
-      Player[MOD_NAME] = merge(defaultStorage, Player[MOD_NAME], newData ?? {});
+      setStorage(Player, merge(defaultStorage, getStorage(Player), newData ?? {}));
       BCStorage.save();
     },
 
     /** Sends a sync message to the server to update clients with the current data. */
     syncClients(target?: number) {
-      sendModEvent("syncCharacter", Player[MOD_NAME], target);
+      sendModEvent("syncCharacter", getStorage(Player), target);
     },
 
     /** Syncs a specific character's data with the provided data. */
     syncCharacter(memberNumber: number, data: PartialDeep<StorageModel>) {
       const otherCharacter = getCharacter(memberNumber);
       if (!otherCharacter) return;
-      otherCharacter[MOD_NAME] = merge(defaultStorage, otherCharacter[MOD_NAME], data);
+      setStorage(otherCharacter, merge(defaultStorage, getStorage(otherCharacter), data));
     },
   };
   return BCStorage;

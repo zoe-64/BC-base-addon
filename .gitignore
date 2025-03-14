@@ -3,3 +3,4 @@
 package-lock.json
 .qodo
 /test/node_modules
+/test/dist
